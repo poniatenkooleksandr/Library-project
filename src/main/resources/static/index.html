@@ -122,11 +122,81 @@
         <button onclick="loadBooks()">Показати всі</button>
     </div>
 
+    <h2> Додати автора</h2>
+
+<div class="search-box">
+    <input type="text" id="authorName" placeholder="Ім'я автора">
+    <input type="text" id="authorCountry" placeholder="Країна">
+    <button onclick="addAuthor()">Додати автора</button>
+</div>
+
+<h2> Додати книгу</h2>
+
+<div class="search-box">
+    <input type="text" id="bookTitle" placeholder="Назва книги">
+    <input type="number" id="bookYear" placeholder="Рік">
+    <input type="number" id="bookAuthorId" placeholder="ID автора">
+    <button onclick="addBook()">Додати книгу</button>
+</div>
+
     <div id="result" class="books"></div>
 
 </div>
 
 <script>
+    async function deleteBook(id) {
+
+    if (!confirm("Видалити книгу?")) {
+        return;
+    }
+
+    const response = await fetch(`/books/${id}`, {
+        method: "DELETE"
+    });
+
+    if (response.ok) {
+        alert("Книгу видалено");
+        loadBooks();
+    }
+}
+    async function addAuthor() {
+    const response = await fetch("/authors", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            name: document.getElementById("authorName").value,
+            country: document.getElementById("authorCountry").value
+        })
+    });
+
+    if (response.ok) {
+        alert("Автор доданий");
+        location.reload();
+    }
+}
+
+async function addBook() {
+    const response = await fetch("/books", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            title: document.getElementById("bookTitle").value,
+            year: parseInt(document.getElementById("bookYear").value),
+            author: {
+                id: parseInt(document.getElementById("bookAuthorId").value)
+            }
+        })
+    });
+
+    if (response.ok) {
+        alert("Книга додана");
+        location.reload();
+    }
+}
     async function loadBooks() {
         const response = await fetch('/books');
         const books = await response.json();
@@ -143,26 +213,32 @@
     showBooks(books);
 }
 
-    function showBooks(books) {
-        const result = document.getElementById('result');
-        result.innerHTML = '';
+   function showBooks(books) {
 
-        if (books.length === 0) {
-            result.innerHTML = '<div class="empty">Книги не знайдено</div>';
-            return;
-        }
+    const result = document.getElementById('result');
+    result.innerHTML = '';
 
-        books.forEach(book => {
-            result.innerHTML += `
-                <div class="book">
-                    <span class="tag">${book.year}</span>
-                    <h3>${book.title}</h3>
-                    <p><b>Автор:</b> ${book.author.name}</p>
-                    <p><b>Країна:</b> ${book.author.country}</p>
-                </div>
-            `;
-        });
+    if (books.length === 0) {
+        result.innerHTML = '<div class="empty">Книги не знайдено</div>';
+        return;
     }
+
+    books.forEach(book => {
+        result.innerHTML += `
+        <div class="book">
+            <span class="tag">${book.year}</span>
+            <h3>${book.title}</h3>
+            <p><b>Автор:</b> ${book.author.name}</p>
+            <p><b>Країна:</b> ${book.author.country}</p>
+
+            <button onclick="deleteBook(${book.id})">
+                🗑 Видалити
+            </button>
+        </div>
+        `;
+    });
+
+}
 
     loadBooks();
 </script>

@@ -25,4 +25,10 @@ public class AuthorController {
     public Author addAuthor(@RequestBody Author author) {
         return repository.save(author);
     }
+
+    @DeleteMapping("/{id}")
+    public String deleteAuthor(@PathVariable Long id) {
+        repository.deleteById(id);
+        return "Author deleted";
+    }
 }
