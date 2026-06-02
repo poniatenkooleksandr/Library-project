@@ -42,10 +42,12 @@
             display: flex;
             gap: 10px;
             margin-bottom: 25px;
+            flex-wrap: wrap;
         }
 
         input {
             flex: 1;
+            min-width: 180px;
             padding: 14px;
             border: 1px solid #cbd5e1;
             border-radius: 10px;
@@ -105,6 +107,15 @@
             padding: 30px;
             color: #64748b;
         }
+
+        .delete-btn {
+            background: #dc2626;
+            margin-top: 10px;
+        }
+
+        .delete-btn:hover {
+            background: #991b1b;
+        }
     </style>
 </head>
 <body>
@@ -117,86 +128,33 @@
 <div class="container">
 
     <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Введіть назву книги">
+        <input type="text" id="searchInput" placeholder="Введіть назву книги або автора">
         <button onclick="searchBooks()">Пошук</button>
         <button onclick="loadBooks()">Показати всі</button>
     </div>
 
-    <h2> Додати автора</h2>
+    <h2>Додати автора</h2>
 
-<div class="search-box">
-    <input type="text" id="authorName" placeholder="Ім'я автора">
-    <input type="text" id="authorCountry" placeholder="Країна">
-    <button onclick="addAuthor()">Додати автора</button>
-</div>
+    <div class="search-box">
+        <input type="text" id="authorName" placeholder="Ім'я автора">
+        <input type="text" id="authorCountry" placeholder="Країна">
+        <button onclick="addAuthor()">Додати автора</button>
+    </div>
 
-<h2> Додати книгу</h2>
+    <h2>Додати книгу</h2>
 
-<div class="search-box">
-    <input type="text" id="bookTitle" placeholder="Назва книги">
-    <input type="number" id="bookYear" placeholder="Рік">
-    <input type="number" id="bookAuthorId" placeholder="ID автора">
-    <button onclick="addBook()">Додати книгу</button>
-</div>
+    <div class="search-box">
+        <input type="text" id="bookTitle" placeholder="Назва книги">
+        <input type="number" id="bookYear" placeholder="Рік">
+        <input type="text" id="bookAuthorIds" placeholder="ID авторів, наприклад 1 або 1,2,3">
+        <button onclick="addBook()">Додати книгу</button>
+    </div>
 
     <div id="result" class="books"></div>
 
 </div>
 
 <script>
-    async function deleteBook(id) {
-
-    if (!confirm("Видалити книгу?")) {
-        return;
-    }
-
-    const response = await fetch(`/books/${id}`, {
-        method: "DELETE"
-    });
-
-    if (response.ok) {
-        alert("Книгу видалено");
-        loadBooks();
-    }
-}
-    async function addAuthor() {
-    const response = await fetch("/authors", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            name: document.getElementById("authorName").value,
-            country: document.getElementById("authorCountry").value
-        })
-    });
-
-    if (response.ok) {
-        alert("Автор доданий");
-        location.reload();
-    }
-}
-
-async function addBook() {
-    const response = await fetch("/books", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            title: document.getElementById("bookTitle").value,
-            year: parseInt(document.getElementById("bookYear").value),
-            author: {
-                id: parseInt(document.getElementById("bookAuthorId").value)
-            }
-        })
-    });
-
-    if (response.ok) {
-        alert("Книга додана");
-        location.reload();
-    }
-}
     async function loadBooks() {
         const response = await fetch('/books');
         const books = await response.json();
@@ -204,41 +162,123 @@ async function addBook() {
     }
 
     async function searchBooks() {
-    const keyword = document.getElementById("searchInput").value;
+        const keyword = document.getElementById("searchInput").value;
 
-    const response = await fetch('/books/search?keyword=' + encodeURIComponent(keyword));
+        const response = await fetch('/books/search?keyword=' + encodeURIComponent(keyword));
+        const books = await response.json();
 
-    const books = await response.json();
-
-    showBooks(books);
-}
-
-   function showBooks(books) {
-
-    const result = document.getElementById('result');
-    result.innerHTML = '';
-
-    if (books.length === 0) {
-        result.innerHTML = '<div class="empty">Книги не знайдено</div>';
-        return;
+        showBooks(books);
     }
 
-    books.forEach(book => {
-        result.innerHTML += `
-        <div class="book">
-            <span class="tag">${book.year}</span>
-            <h3>${book.title}</h3>
-            <p><b>Автор:</b> ${book.author.name}</p>
-            <p><b>Країна:</b> ${book.author.country}</p>
+    async function addAuthor() {
+    const name = document.getElementById("authorName").value;
+    const countryName = document.getElementById("authorCountry").value;
 
-            <button onclick="deleteBook(${book.id})">
-                🗑 Видалити
-            </button>
-        </div>
-        `;
+    const response = await fetch("/authors", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            name: name,
+            country: {
+                name: countryName
+            }
+        })
     });
 
+    if (response.ok) {
+        alert("Автор доданий");
+        location.reload();
+    } else {
+        alert("Помилка при додаванні автора");
+    }
 }
+
+    async function addBook() {
+        const title = document.getElementById("bookTitle").value;
+        const year = parseInt(document.getElementById("bookYear").value);
+        const authorIdsText = document.getElementById("bookAuthorIds").value;
+
+        const authors = authorIdsText
+            .split(",")
+            .map(id => id.trim())
+            .filter(id => id !== "")
+            .map(id => ({ id: parseInt(id) }));
+
+        const response = await fetch("/books", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                title: title,
+                year: year,
+                authors: authors
+            })
+        });
+
+        if (response.ok) {
+            alert("Книга додана");
+            location.reload();
+        } else {
+            alert("Помилка при додаванні книги");
+        }
+    }
+
+    async function deleteBook(id) {
+        if (!confirm("Видалити книгу?")) {
+            return;
+        }
+
+        const response = await fetch(`/books/${id}`, {
+            method: "DELETE"
+        });
+
+        if (response.ok) {
+            alert("Книгу видалено");
+            loadBooks();
+        } else {
+            alert("Помилка при видаленні книги");
+        }
+    }
+
+    function showBooks(books) {
+        const result = document.getElementById('result');
+        result.innerHTML = '';
+
+        if (!books || books.length === 0) {
+            result.innerHTML = '<div class="empty">Книги не знайдено</div>';
+            return;
+        }
+
+        books.forEach(book => {
+            const authorsNames = book.authors
+                ? book.authors.map(author => author.name).join(", ")
+                : "Немає авторів";
+
+            const countries = book.authors
+    ? [...new Set(
+        book.authors
+            .map(author => author.country ? author.country.name : "")
+            .filter(country => country !== "")
+      )].join(", ")
+    : "";
+
+            result.innerHTML += `
+                <div class="book">
+                    <span class="tag">${book.year}</span>
+                    <h3>${book.title}</h3>
+                    <p><b>Автори:</b> ${authorsNames}</p>
+                    <p><b>Країни:</b> ${countries}</p>
+
+                    <button class="delete-btn" onclick="deleteBook(${book.id})">
+                        🗑 Видалити
+                    </button>
+                </div>
+            `;
+        });
+    }
 
     loadBooks();
 </script>

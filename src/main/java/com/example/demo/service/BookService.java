@@ -6,6 +6,7 @@ import com.example.demo.repository.AuthorRepository;
 import com.example.demo.repository.BookRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -29,12 +30,15 @@ public class BookService {
     }
 
     public Book saveBook(Book book) {
-        Long authorId = book.getAuthor().getId();
+        List<Author> authors = new ArrayList<>();
 
-        Author author = authorRepository.findById(authorId)
-                .orElseThrow(() -> new RuntimeException("Author not found"));
+        for (Author authorFromRequest : book.getAuthors()) {
+            Author author = authorRepository.findById(authorFromRequest.getId())
+                    .orElseThrow(() -> new RuntimeException("Author not found"));
+            authors.add(author);
+        }
 
-        book.setAuthor(author);
+        book.setAuthors(authors);
 
         return bookRepository.save(book);
     }
@@ -45,10 +49,16 @@ public class BookService {
         book.setTitle(updatedBook.getTitle());
         book.setYear(updatedBook.getYear());
 
-        if (updatedBook.getAuthor() != null) {
-            Author author = authorRepository.findById(updatedBook.getAuthor().getId())
-                    .orElseThrow(() -> new RuntimeException("Author not found"));
-            book.setAuthor(author);
+        if (updatedBook.getAuthors() != null) {
+            List<Author> authors = new ArrayList<>();
+
+            for (Author authorFromRequest : updatedBook.getAuthors()) {
+                Author author = authorRepository.findById(authorFromRequest.getId())
+                        .orElseThrow(() -> new RuntimeException("Author not found"));
+                authors.add(author);
+            }
+
+            book.setAuthors(authors);
         }
 
         return bookRepository.save(book);
@@ -58,11 +68,11 @@ public class BookService {
         bookRepository.deleteById(id);
     }
 
-public List<Book> search(String keyword) {
-    return bookRepository.searchBooks(keyword);
-}
+    public List<Book> search(String keyword) {
+        return bookRepository.searchBooks(keyword);
+    }
 
-public List<Book> findByAuthor(Long authorId) {
-    return bookRepository.findByAuthorId(authorId);
-}
+    public List<Book> findByAuthor(Long authorId) {
+        return bookRepository.findByAuthorId(authorId);
+    }
 }

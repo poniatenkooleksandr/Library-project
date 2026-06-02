@@ -9,12 +9,18 @@ import java.util.List;
 
 public interface BookRepository extends JpaRepository<Book, Long> {
 
-    List<Book> findByAuthorId(Long authorId);
-
     @Query("""
-    SELECT b FROM Book b
+    SELECT DISTINCT b FROM Book b
+    JOIN b.authors a
     WHERE LOWER(b.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
-    OR LOWER(b.author.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    OR LOWER(a.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
     """)
     List<Book> searchBooks(@Param("keyword") String keyword);
+
+    @Query("""
+    SELECT DISTINCT b FROM Book b
+    JOIN b.authors a
+    WHERE a.id = :authorId
+    """)
+    List<Book> findByAuthorId(@Param("authorId") Long authorId);
 }

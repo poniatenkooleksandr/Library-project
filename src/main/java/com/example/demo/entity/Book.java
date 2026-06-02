@@ -1,6 +1,8 @@
 package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "books")
@@ -15,16 +17,21 @@ public class Book {
     @Column(name = "publish_year")
     private Integer year;
 
-    @ManyToOne
-    @JoinColumn(name = "author_id")
-    private Author author;
+    @ManyToMany
+    @JoinTable(
+            name = "book_authors",
+            joinColumns = @JoinColumn(name = "book_id"),
+            inverseJoinColumns = @JoinColumn(name = "author_id")
+    )
+    @JsonIgnoreProperties("books")
+    private List<Author> authors;
 
     public Book() {}
 
-    public Book(String title, Integer year, Author author) {
+    public Book(String title, Integer year, List<Author> authors) {
         this.title = title;
         this.year = year;
-        this.author = author;
+        this.authors = authors;
     }
 
     public Long getId() {
@@ -39,8 +46,8 @@ public class Book {
         return year;
     }
 
-    public Author getAuthor() {
-        return author;
+    public List<Author> getAuthors() {
+        return authors;
     }
 
     public void setId(Long id) {
@@ -55,7 +62,7 @@ public class Book {
         this.year = year;
     }
 
-    public void setAuthor(Author author) {
-        this.author = author;
+    public void setAuthors(List<Author> authors) {
+        this.authors = authors;
     }
 }

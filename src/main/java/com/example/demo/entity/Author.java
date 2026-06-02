@@ -13,15 +13,18 @@ public class Author {
     private Long id;
 
     private String name;
-    private String country;
 
-    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
+    @ManyToOne
+    @JoinColumn(name = "country_id")
+    private Country country;
+
+    @ManyToMany(mappedBy = "authors")
     @JsonIgnore
     private List<Book> books;
 
     public Author() {}
 
-    public Author(String name, String country) {
+    public Author(String name, Country country) {
         this.name = name;
         this.country = country;
     }
@@ -34,7 +37,7 @@ public class Author {
         return name;
     }
 
-    public String getCountry() {
+    public Country getCountry() {
         return country;
     }
 
@@ -50,7 +53,7 @@ public class Author {
         this.name = name;
     }
 
-    public void setCountry(String country) {
+    public void setCountry(Country country) {
         this.country = country;
     }
 
