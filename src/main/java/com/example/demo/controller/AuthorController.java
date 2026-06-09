@@ -38,9 +38,31 @@ public class AuthorController {
         return authorRepository.save(author);
     }
 
+    @PutMapping("/{id}")
+public Author updateAuthor(@PathVariable Long id,
+                           @RequestBody Author updatedAuthor) {
+
+    Author author = authorRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Author not found"));
+
+    author.setName(updatedAuthor.getName());
+
+    if (updatedAuthor.getCountry() != null) {
+        String countryName = updatedAuthor.getCountry().getName();
+
+        Country country = new Country(countryName);
+        country = countryRepository.save(country);
+
+        author.setCountry(country);
+    }
+
+    return authorRepository.save(author);
+}
+
     @DeleteMapping("/{id}")
     public String deleteAuthor(@PathVariable Long id) {
         authorRepository.deleteById(id);
         return "Author deleted";
     }
+    
 }

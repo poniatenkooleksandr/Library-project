@@ -109,13 +109,23 @@
         }
 
         .delete-btn {
-            background: #dc2626;
-            margin-top: 10px;
-        }
+    background: #dc2626;
+    margin-top: 10px;
+}
 
-        .delete-btn:hover {
-            background: #991b1b;
-        }
+.delete-btn:hover {
+    background: #991b1b;
+}
+
+.edit-btn {
+    background: #16a34a;
+    margin-top: 10px;
+    margin-right: 8px;
+}
+
+.edit-btn:hover {
+    background: #166534;
+}
     </style>
 </head>
 <body>
@@ -226,6 +236,42 @@
         }
     }
 
+    async function editBook(id, oldTitle, oldYear, oldAuthorIds) {
+    const newTitle = prompt("Нова назва книги:", oldTitle);
+    if (newTitle === null) return;
+
+    const newYear = prompt("Новий рік:", oldYear);
+    if (newYear === null) return;
+
+    const newAuthorIds = prompt("ID авторів через кому:", oldAuthorIds);
+    if (newAuthorIds === null) return;
+
+    const authors = newAuthorIds
+    .split(",")
+    .map(id => id.trim())
+    .filter(id => id !== "")
+    .map(id => ({ id: parseInt(id) }));
+
+    const response = await fetch(`/books/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            title: newTitle,
+            year: parseInt(newYear),
+            authors: authors
+        })
+    });
+
+    if (response.ok) {
+        alert("Книгу оновлено");
+        loadBooks();
+    } else {
+        alert("Помилка редагування");
+    }
+}
+
     async function deleteBook(id) {
         if (!confirm("Видалити книгу?")) {
             return;
@@ -266,17 +312,22 @@
     : "";
 
             result.innerHTML += `
-                <div class="book">
-                    <span class="tag">${book.year}</span>
-                    <h3>${book.title}</h3>
-                    <p><b>Автори:</b> ${authorsNames}</p>
-                    <p><b>Країни:</b> ${countries}</p>
+    <div class="book">
+        <span class="tag">${book.year}</span>
+        <h3>${book.title}</h3>
+        <p><b>Автори:</b> ${authorsNames}</p>
+        <p><b>Країни:</b> ${countries}</p>
 
-                    <button class="delete-btn" onclick="deleteBook(${book.id})">
-                        🗑 Видалити
-                    </button>
-                </div>
-            `;
+        <button class="edit-btn"
+                onclick="editBook(${book.id}, '${book.title}', ${book.year}, '${book.authors ? book.authors.map(a => a.id).join(',') : ''}')">
+            ✏️ Редагувати
+        </button>
+
+        <button class="delete-btn" onclick="deleteBook(${book.id})">
+            🗑 Видалити
+        </button>
+    </div>
+`;
         });
     }
 
