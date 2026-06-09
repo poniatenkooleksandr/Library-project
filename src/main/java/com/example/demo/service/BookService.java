@@ -69,10 +69,14 @@ public class BookService {
     }
 
     public List<Book> search(String keyword) {
-        return bookRepository.searchBooks(keyword);
-    }
+    return bookRepository
+            .findByTitleContainingIgnoreCaseOrAuthorsNameContainingIgnoreCase(
+                    keyword,
+                    keyword
+            );
+}
 
-    public List<Book> findByAuthor(Long authorId) {
-        return bookRepository.findByAuthorId(authorId);
-    }
+public List<Book> findByAuthor(Long authorId) {
+    return bookRepository.findByAuthorsId(authorId);
+}
 }
