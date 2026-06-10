@@ -151,19 +151,51 @@
         <button onclick="addAuthor()">Додати автора</button>
     </div>
 
-    <h2>Автори</h2>
+    <h2>Довідники</h2>
+
 <div class="search-box">
-    <table id="authorsTable" style="width:100%; border-collapse: collapse;">
-        <thead>
-            <tr>
-                <th style="text-align:left; padding:8px;">ID</th>
-                <th style="text-align:left; padding:8px;">Автор</th>
-                <th style="text-align:left; padding:8px;">Країна</th>
-                <th style="text-align:left; padding:8px;">Дія</th>
-            </tr>
-        </thead>
-        <tbody id="authorsList"></tbody>
-    </table>
+    <button onclick="showAuthorsBlock()">Автори</button>
+    <button onclick="showCountriesBlock()">Країни</button>
+</div>
+
+<div id="authorsBlock">
+    <h3>Автори</h3>
+
+    <div class="search-box">
+        <table style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="text-align:left; padding:8px;">ID</th>
+                    <th style="text-align:left; padding:8px;">Автор</th>
+                    <th style="text-align:left; padding:8px;">Країна</th>
+                    <th style="text-align:left; padding:8px;">Дія</th>
+                </tr>
+            </thead>
+            <tbody id="authorsList"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="countriesBlock" style="display:none;">
+    <h3>Країни</h3>
+
+    <div class="search-box">
+        <input type="text" id="countryName" placeholder="Назва країни">
+        <button onclick="addCountry()">Додати країну</button>
+    </div>
+
+    <div class="search-box">
+        <table style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="text-align:left; padding:8px;">ID</th>
+                    <th style="text-align:left; padding:8px;">Країна</th>
+                    <th style="text-align:left; padding:8px;">Дія</th>
+                </tr>
+            </thead>
+            <tbody id="countriesList"></tbody>
+        </table>
+    </div>
 </div>
 
     <h2>Додати книгу</h2>
@@ -180,6 +212,18 @@
 </div>
 
 <script>
+
+function showAuthorsBlock() {
+    document.getElementById("authorsBlock").style.display = "block";
+    document.getElementById("countriesBlock").style.display = "none";
+}
+
+function showCountriesBlock() {
+    document.getElementById("authorsBlock").style.display = "none";
+    document.getElementById("countriesBlock").style.display = "block";
+    loadCountries();
+}
+
     async function loadBooks() {
         const response = await fetch('/books');
         const books = await response.json();
@@ -210,6 +254,74 @@
 </tr>
 `;
     });
+}
+
+async function loadCountries() {
+    const response = await fetch("/countries");
+    const countries = await response.json();
+
+    const countriesList = document.getElementById("countriesList");
+    countriesList.innerHTML = "";
+
+    countries.forEach(country => {
+        countriesList.innerHTML += `
+            <tr>
+                <td style="padding:8px;">${country.id}</td>
+                <td style="padding:8px;">${country.name}</td>
+                <td style="padding:8px;">
+                    <button class="edit-btn" onclick="editCountry(${country.id}, '${country.name}')">
+                        ✏️
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+async function addCountry() {
+    const name = document.getElementById("countryName").value;
+
+    const response = await fetch("/countries", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            name: name
+        })
+    });
+
+    if (response.ok) {
+        alert("Країну додано");
+        document.getElementById("countryName").value = "";
+        loadCountries();
+    } else {
+        alert("Помилка при додаванні країни");
+    }
+}
+
+async function editCountry(id, oldName) {
+    const newName = prompt("Нова назва країни:", oldName);
+    if (newName === null) return;
+
+    const response = await fetch(`/countries/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            name: newName
+        })
+    });
+
+    if (response.ok) {
+        alert("Країну оновлено");
+        loadCountries();
+        loadAuthors();
+        loadBooks();
+    } else {
+        alert("Помилка редагування країни");
+    }
 }
 
     async function searchBooks() {
